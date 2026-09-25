@@ -1,0 +1,44 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  background: #f6f3ee;
+  color: #1c1b1a;
+}
+
+a { color: #e85d3d; }
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-primary {
+  background: #e85d3d;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.input {
+  border: 1px solid #e8e1d6;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.card {
+  border: 1px solid #efeae1;
+  border-radius: 14px;
+  padding: 14px;
+}
