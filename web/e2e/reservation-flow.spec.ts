@@ -57,7 +57,8 @@ test.describe('Reservation Flow', () => {
     await expect(restaurantSelect).toBeVisible({ timeout: 5000 })
 
     // Select a restaurant
-    if (await restaurantSelect.first().tagName() === 'select') {
+    const tagName = await restaurantSelect.first().evaluate(el => el.tagName.toLowerCase())
+    if (tagName === 'select') {
       await restaurantSelect.first().selectOption({ index: 1 })
     } else {
       await restaurantSelect.first().click()
