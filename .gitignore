@@ -43,6 +43,7 @@ web/yarn.lock
 web/dist/
 web/.env.local
 web/.env.*.local
+web/next-env.d.ts
 
 # IDE
 .vscode/
