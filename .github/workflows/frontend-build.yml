@@ -1,0 +1,51 @@
+name: Frontend Build & Lint
+
+on:
+  push:
+    branches: [main, develop, claude/**]
+    paths:
+      - 'web/**'
+      - '.github/workflows/frontend-build.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'web/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'web/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./web
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./web
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Check TypeScript
+        working-directory: ./web
+        run: npm run typecheck
+
+      - name: Build project
+        working-directory: ./web
+        run: npm run build
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: next-build
+          path: web/.next/
+          retention-days: 5
