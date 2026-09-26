@@ -105,7 +105,13 @@ class WaitlistEntry(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
+    phone = Column(String, nullable=True)
     name = Column(String)
-    source = Column(String)  # "landing_page", "mobile_app", etc.
-    status = Column(String, default="active")
+    source = Column(String)  # "landing_page", "mobile_app", "organic", etc.
+    campaign_source = Column(String, nullable=True)  # utm_source, utm_campaign, etc.
+    consent_marketing = Column(Boolean, default=False)
+    consent_terms = Column(Boolean, default=False)
+    status = Column(String, default="active")  # active, converted, inactive
+    notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
