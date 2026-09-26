@@ -48,13 +48,19 @@ class Business(Base):
     __tablename__ = "businesses"
 
     id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, index=True)
     type = Column(String)  # "restaurant", "cafe", etc.
     name = Column(String)
     address = Column(String)
+    phone = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
     coordinates = Column(JSON)
     tax_no = Column(String, unique=True)
+    daily_capacity = Column(Integer, default=100)
     status = Column(String, default="active")
     commission_rate = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class Reservation(Base):
@@ -63,9 +69,14 @@ class Reservation(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True)
     business_id = Column(Integer, index=True)
+    reservation_date = Column(DateTime)
     reservation_at = Column(DateTime)
+    guest_count = Column(Integer)
     party_size = Column(Integer)
+    special_requests = Column(Text, nullable=True)
     status = Column(String, default="pending")  # pending, confirmed, cancelled
+    approval_status = Column(String, default="pending")  # pending, approved, rejected
+    approval_score = Column(Float, default=0.0)
     cancellation_reason = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -77,11 +88,14 @@ class PreOrder(Base):
     user_id = Column(Integer, index=True)
     business_id = Column(Integer, index=True)
     items_json = Column(JSON)
+    items_description = Column(Text, nullable=True)
+    pickup_date = Column(DateTime, nullable=True)
     total_try = Column(Float)
     currency = Column(String, default="TRY")
     payment_status = Column(String, default="pending")  # pending, paid, refunded
     payment_ref = Column(String, nullable=True)
     status = Column(String, default="pending")  # pending, confirmed, cancelled
+    approval_status = Column(String, default="pending")  # pending, approved, rejected
     idempotency_key = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
