@@ -149,3 +149,70 @@ class WaitlistEntry(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Plan(Base):
+    __tablename__ = "plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    stripe_product_id = Column(String, unique=True, index=True)
+    stripe_price_id = Column(String, unique=True, index=True)
+    name = Column(String)
+    description = Column(Text, nullable=True)
+    amount_cents = Column(Integer)
+    currency = Column(String, default="usd")
+    billing_interval = Column(String)
+    features = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    plan_id = Column(Integer, index=True)
+    stripe_subscription_id = Column(String, unique=True, index=True)
+    stripe_customer_id = Column(String, index=True)
+    status = Column(String)
+    current_period_start = Column(DateTime)
+    current_period_end = Column(DateTime)
+    cancel_at = Column(DateTime, nullable=True)
+    canceled_at = Column(DateTime, nullable=True)
+    subscription_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    subscription_id = Column(Integer, nullable=True, index=True)
+    stripe_payment_intent_id = Column(String, unique=True, index=True)
+    stripe_charge_id = Column(String, nullable=True, unique=True, index=True)
+    amount_cents = Column(Integer)
+    currency = Column(String, default="usd")
+    status = Column(String)
+    payment_method_type = Column(String)
+    receipt_url = Column(String, nullable=True)
+    payment_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PaymentEvent(Base):
+    __tablename__ = "payment_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    stripe_event_id = Column(String, unique=True, index=True)
+    event_type = Column(String)
+    user_id = Column(Integer, nullable=True, index=True)
+    subscription_id = Column(Integer, nullable=True, index=True)
+    payment_id = Column(Integer, nullable=True, index=True)
+    event_data = Column(JSON)
+    processed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

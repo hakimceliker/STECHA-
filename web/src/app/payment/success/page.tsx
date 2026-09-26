@@ -101,9 +101,9 @@ function PaymentSuccessContent() {
                   fullWidth
                   variant="outline"
                   size="lg"
-                  onClick={() => router.push('/pre-orders')}
+                  onClick={() => router.push('/profile')}
                 >
-                  Siparişleri Görüntüle
+                  Abonelik Sayfam
                 </Button>
               </div>
             </>
