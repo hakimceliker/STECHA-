@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button, Card } from '@/components'
 
-export default function PaymentFailedPage() {
+function PaymentFailedContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const errorMessage = searchParams.get('message') || 'Ödeme işlemi başarısız oldu'
@@ -74,5 +75,13 @@ export default function PaymentFailedPage() {
         </div>
       </Card>
     </div>
+  )
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={<div>Yükleniyor...</div>}>
+      <PaymentFailedContent />
+    </Suspense>
   )
 }

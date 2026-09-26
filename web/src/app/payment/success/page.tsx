@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import React, { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button, Card } from '@/components'
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const transactionId = searchParams.get('transaction_id')
@@ -110,5 +111,13 @@ export default function PaymentSuccessPage() {
         </div>
       </Card>
     </div>
+  )
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div>Yükleniyor...</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }

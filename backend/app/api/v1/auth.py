@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from python_jose import JWTError, jwt
+from jose import JWTError, jwt
 
 from app.core.config import settings
 from app.db.session import get_db
