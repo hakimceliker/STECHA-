@@ -118,6 +118,22 @@ class Document(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class ConversationMessage(Base):
+    __tablename__ = "conversation_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, index=True)
+    user_id = Column(Integer, index=True)
+    role = Column(String)  # "user", "assistant", "system"
+    content = Column(Text)
+    model = Column(String, nullable=True)
+    provider = Column(String, default="openai")  # openai, anthropic, cohere
+    tokens_in = Column(Integer, default=0)
+    tokens_out = Column(Integer, default=0)
+    cost_usd = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class WaitlistEntry(Base):
     __tablename__ = "waitlist_entries"
 
