@@ -1,5 +1,6 @@
 """Reservations endpoints"""
 
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -11,6 +12,7 @@ from app.db.session import get_db
 from app.db.base import User, Reservation, Business
 
 router = APIRouter(tags=["reservations"])
+logger = logging.getLogger(__name__)
 
 
 class ReservationCreate(BaseModel):
@@ -63,6 +65,8 @@ async def create_reservation(
     db: Session = Depends(get_db)
 ):
     """Create a new reservation"""
+    logger.info("Reservation creation attempt - user_id: %d, business_id: %d, guest_count: %d",
+                current_user.id, reservation_data.business_id, reservation_data.guest_count)
 
     # Validate business exists
     business = db.query(Business).filter(
@@ -71,6 +75,8 @@ async def create_reservation(
     ).first()
 
     if not business:
+        logger.warning("Reservation creation failed - business not found - user_id: %d, business_id: %d",
+                      current_user.id, reservation_data.business_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Restaurant not found or inactive"
@@ -78,6 +84,7 @@ async def create_reservation(
 
     # Validate reservation date is not in past
     if reservation_data.reservation_date < datetime.utcnow():
+        logger.warning("Reservation creation failed - date in past - user_id: %d", current_user.id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Reservation date cannot be in the past"
@@ -85,6 +92,8 @@ async def create_reservation(
 
     # Validate guest count
     if reservation_data.guest_count < 1 or reservation_data.guest_count > business.daily_capacity:
+        logger.warning("Reservation creation failed - invalid guest count - user_id: %d, guest_count: %d",
+                      current_user.id, reservation_data.guest_count)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Guest count must be between 1 and {business.daily_capacity}"
@@ -107,6 +116,8 @@ async def create_reservation(
     db.commit()
     db.refresh(reservation)
 
+    logger.info("Reservation created successfully - reservation_id: %d, user_id: %d, business_id: %d",
+                reservation.id, current_user.id, reservation_data.business_id)
     return reservation
 
 
@@ -140,6 +151,7 @@ async def update_reservation(
     db: Session = Depends(get_db)
 ):
     """Update a reservation"""
+    logger.info("Reservation update attempt - reservation_id: %d, user_id: %d", reservation_id, current_user.id)
 
     reservation = db.query(Reservation).filter(
         Reservation.id == reservation_id,
@@ -147,6 +159,8 @@ async def update_reservation(
     ).first()
 
     if not reservation:
+        logger.warning("Reservation update failed - not found - reservation_id: %d, user_id: %d",
+                      reservation_id, current_user.id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Reservation not found"
@@ -154,6 +168,8 @@ async def update_reservation(
 
     # Cannot update confirmed or cancelled reservations
     if reservation.status in ["confirmed", "cancelled"]:
+        logger.warning("Reservation update failed - status %s - reservation_id: %d",
+                      reservation.status, reservation_id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot update {reservation.status} reservation"
@@ -161,6 +177,7 @@ async def update_reservation(
 
     if update_data.reservation_date:
         if update_data.reservation_date < datetime.utcnow():
+            logger.warning("Reservation update failed - date in past - reservation_id: %d", reservation_id)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Reservation date cannot be in the past"
@@ -173,6 +190,8 @@ async def update_reservation(
             Business.id == reservation.business_id
         ).first()
         if update_data.guest_count < 1 or update_data.guest_count > business.daily_capacity:
+            logger.warning("Reservation update failed - invalid guest count - reservation_id: %d, guest_count: %d",
+                          reservation_id, update_data.guest_count)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Guest count must be between 1 and {business.daily_capacity}"
@@ -189,6 +208,8 @@ async def update_reservation(
     db.commit()
     db.refresh(reservation)
 
+    logger.info("Reservation updated successfully - reservation_id: %d, new_status: %s",
+                reservation_id, reservation.status)
     return reservation
 
 
@@ -199,6 +220,7 @@ async def cancel_reservation(
     db: Session = Depends(get_db)
 ):
     """Cancel a reservation"""
+    logger.info("Reservation cancellation attempt - reservation_id: %d, user_id: %d", reservation_id, current_user.id)
 
     reservation = db.query(Reservation).filter(
         Reservation.id == reservation_id,
@@ -206,12 +228,14 @@ async def cancel_reservation(
     ).first()
 
     if not reservation:
+        logger.warning("Reservation cancellation failed - not found - reservation_id: %d", reservation_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Reservation not found"
         )
 
     if reservation.status == "cancelled":
+        logger.warning("Reservation cancellation failed - already cancelled - reservation_id: %d", reservation_id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Reservation is already cancelled"
@@ -221,4 +245,5 @@ async def cancel_reservation(
     db.commit()
     db.refresh(reservation)
 
+    logger.info("Reservation cancelled successfully - reservation_id: %d", reservation_id)
     return {"status": "cancelled", "reservation_id": reservation.id}

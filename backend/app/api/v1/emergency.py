@@ -1,6 +1,9 @@
 """Emergency/SOS endpoints for user safety"""
+import logging
+import re
 from datetime import datetime
 from typing import Optional
+from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -11,6 +14,7 @@ from app.api.v1.auth import get_current_user
 from app.services.notification_service import notification_service
 
 router = APIRouter(prefix="/emergency", tags=["emergency"])
+logger = logging.getLogger(__name__)
 
 class EmergencySOS(BaseModel):
     """Emergency SOS alert"""
@@ -30,30 +34,9 @@ async def trigger_sos(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Trigger emergency SOS alert
-    - Logs the emergency event
-    - Notifies designated emergency contacts
-    - Stores location information (if provided)
-    """
-    from uuid import uuid4
-    import logging
-
+    """Trigger emergency SOS alert with contact notifications and location tracking"""
     alert_id = str(uuid4())
-    logger = logging.getLogger(__name__)
-
-    # Log emergency alert
-    logger.critical(
-        f"SOS Alert triggered by user {current_user.id}",
-        extra={
-            "alert_id": alert_id,
-            "user_id": current_user.id,
-            "location": req.location,
-            "message": req.message,
-            "timestamp": datetime.utcnow().isoformat(),
-            "event_type": "EMERGENCY_SOS"
-        }
-    )
+    logger.critical("SOS Alert triggered - user_id: %d, alert_id: %s, location: %s", current_user.id, alert_id, req.location)
 
     # Notify emergency contacts
     try:
@@ -61,20 +44,11 @@ async def trigger_sos(
             notification_service.send_email(
                 to_email=contact_email,
                 subject=f"🚨 Emergency SOS Alert from {current_user.name}",
-                body=f"""
-                Emergency alert received from {current_user.name}
-                Alert ID: {alert_id}
-                Message: {req.message or 'No additional message'}
-                Location: {req.location if req.location else 'Location not provided'}
-                Time: {datetime.utcnow().isoformat()}
-
-                Please ensure the user is safe.
-                """,
+                body=f"Emergency alert received from {current_user.name}\nAlert ID: {alert_id}\nMessage: {req.message or 'No additional message'}\nLocation: {req.location if req.location else 'Location not provided'}\nTime: {datetime.utcnow().isoformat()}",
                 alert_type="emergency"
             )
     except Exception as e:
-        logger.error(f"Failed to notify emergency contacts: {str(e)}")
-        # Don't fail the SOS request due to notification failure
+        logger.error("Failed to notify emergency contacts - alert_id: %s, error: %s", alert_id, str(e))
 
     return {
         "alert_id": alert_id,
@@ -87,25 +61,10 @@ async def check_in(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    User check-in endpoint
-    - Confirms user is safe
-    - Can cancel pending SOS alerts
-    """
-    import logging
-    logger = logging.getLogger(__name__)
-
-    logger.info(
-        f"User check-in: {current_user.id}",
-        extra={
-            "user_id": current_user.id,
-            "timestamp": datetime.utcnow().isoformat(),
-            "event_type": "USER_CHECK_IN"
-        }
-    )
-
+    """User check-in endpoint - confirms user is safe"""
     current_user.last_check_in = datetime.utcnow()
     db.commit()
+    logger.info("User check-in recorded - user_id: %d", current_user.id)
 
     return {
         "status": "checked_in",
@@ -119,37 +78,25 @@ async def set_emergency_contacts(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Set emergency contact emails
-    - Store up to 5 emergency contacts
-    """
+    """Set emergency contact emails (max 5)"""
     if len(contacts) > 5:
+        logger.warning("Emergency contact setup failed - too many contacts for user_id: %d", current_user.id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Maximum 5 emergency contacts allowed"
         )
 
     # Validate emails
-    import re
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     for email in contacts:
         if not re.match(email_pattern, email):
+            logger.warning("Emergency contact setup failed - invalid email for user_id: %d", current_user.id)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid email: {email}"
             )
 
-    # Store contacts (would be stored in User model or separate table in production)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(
-        f"Emergency contacts updated for user {current_user.id}",
-        extra={
-            "user_id": current_user.id,
-            "contact_count": len(contacts),
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    )
+    logger.info("Emergency contacts updated - user_id: %d, contact_count: %d", current_user.id, len(contacts))
 
     return {
         "status": "updated",

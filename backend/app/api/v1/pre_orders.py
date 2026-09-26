@@ -1,5 +1,6 @@
 """Pre-Orders endpoints"""
 
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ from app.db.session import get_db
 from app.db.base import User, PreOrder, Business
 
 router = APIRouter(tags=["pre_orders"])
+logger = logging.getLogger(__name__)
 
 
 class PreOrderCreate(BaseModel):
@@ -70,6 +72,8 @@ async def create_pre_order(
     db: Session = Depends(get_db)
 ):
     """Create a new pre-order"""
+    logger.info("Pre-order creation attempt - user_id: %d, business_id: %d, total: %f",
+                current_user.id, pre_order_data.business_id, pre_order_data.total_try)
 
     # Validate business exists
     business = db.query(Business).filter(
@@ -78,6 +82,8 @@ async def create_pre_order(
     ).first()
 
     if not business:
+        logger.warning("Pre-order creation failed - business not found - user_id: %d, business_id: %d",
+                      current_user.id, pre_order_data.business_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Restaurant not found or inactive"
@@ -85,6 +91,7 @@ async def create_pre_order(
 
     # Validate items exist
     if not pre_order_data.items or len(pre_order_data.items) == 0:
+        logger.warning("Pre-order creation failed - no items - user_id: %d", current_user.id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Pre-order must contain at least one item"
@@ -92,6 +99,8 @@ async def create_pre_order(
 
     # Validate total price
     if pre_order_data.total_try <= 0:
+        logger.warning("Pre-order creation failed - invalid total - user_id: %d, total: %f",
+                      current_user.id, pre_order_data.total_try)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Total price must be greater than 0"
@@ -100,6 +109,7 @@ async def create_pre_order(
     # Validate pickup date if provided (not in past)
     if pre_order_data.pickup_date:
         if pre_order_data.pickup_date < datetime.utcnow():
+            logger.warning("Pre-order creation failed - pickup date in past - user_id: %d", current_user.id)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Pickup date cannot be in the past"
@@ -124,6 +134,8 @@ async def create_pre_order(
     db.commit()
     db.refresh(pre_order)
 
+    logger.info("Pre-order created successfully - pre_order_id: %d, user_id: %d, total: %f",
+                pre_order.id, current_user.id, pre_order_data.total_try)
     return pre_order
 
 
@@ -157,6 +169,7 @@ async def update_pre_order(
     db: Session = Depends(get_db)
 ):
     """Update a pre-order"""
+    logger.info("Pre-order update attempt - pre_order_id: %d, user_id: %d", pre_order_id, current_user.id)
 
     pre_order = db.query(PreOrder).filter(
         PreOrder.id == pre_order_id,
@@ -164,6 +177,8 @@ async def update_pre_order(
     ).first()
 
     if not pre_order:
+        logger.warning("Pre-order update failed - not found - pre_order_id: %d, user_id: %d",
+                      pre_order_id, current_user.id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Pre-order not found"
@@ -171,6 +186,8 @@ async def update_pre_order(
 
     # Cannot update confirmed or cancelled pre-orders
     if pre_order.status in ["confirmed", "cancelled"]:
+        logger.warning("Pre-order update failed - status %s - pre_order_id: %d",
+                      pre_order.status, pre_order_id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot update {pre_order.status} pre-order"
@@ -178,6 +195,7 @@ async def update_pre_order(
 
     if update_data.items is not None:
         if len(update_data.items) == 0:
+            logger.warning("Pre-order update failed - no items - pre_order_id: %d", pre_order_id)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Pre-order must contain at least one item"
@@ -189,6 +207,7 @@ async def update_pre_order(
 
     if update_data.pickup_date:
         if update_data.pickup_date < datetime.utcnow():
+            logger.warning("Pre-order update failed - pickup date in past - pre_order_id: %d", pre_order_id)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Pickup date cannot be in the past"
@@ -197,6 +216,8 @@ async def update_pre_order(
 
     if update_data.total_try:
         if update_data.total_try <= 0:
+            logger.warning("Pre-order update failed - invalid total - pre_order_id: %d, total: %f",
+                          pre_order_id, update_data.total_try)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Total price must be greater than 0"
@@ -209,6 +230,8 @@ async def update_pre_order(
     db.commit()
     db.refresh(pre_order)
 
+    logger.info("Pre-order updated successfully - pre_order_id: %d, new_status: %s",
+                pre_order_id, pre_order.status)
     return pre_order
 
 
@@ -219,6 +242,7 @@ async def cancel_pre_order(
     db: Session = Depends(get_db)
 ):
     """Cancel a pre-order"""
+    logger.info("Pre-order cancellation attempt - pre_order_id: %d, user_id: %d", pre_order_id, current_user.id)
 
     pre_order = db.query(PreOrder).filter(
         PreOrder.id == pre_order_id,
@@ -226,12 +250,14 @@ async def cancel_pre_order(
     ).first()
 
     if not pre_order:
+        logger.warning("Pre-order cancellation failed - not found - pre_order_id: %d", pre_order_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Pre-order not found"
         )
 
     if pre_order.status == "cancelled":
+        logger.warning("Pre-order cancellation failed - already cancelled - pre_order_id: %d", pre_order_id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Pre-order is already cancelled"
@@ -241,4 +267,5 @@ async def cancel_pre_order(
     db.commit()
     db.refresh(pre_order)
 
+    logger.info("Pre-order cancelled successfully - pre_order_id: %d", pre_order_id)
     return {"status": "cancelled", "pre_order_id": pre_order.id}

@@ -1,13 +1,18 @@
 """Stech AI Backend - FastAPI Application"""
 
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.logging import setup_logging
 from app.db.session import engine
 from app.db.base import Base
 from app.api.v1 import auth, chat, conversations, places, reservations, pre_orders, waitlist, wallet, admin, restaurant, documents, ai, payments, analytics, emergency
+
+# Setup logging
+logger = setup_logging()
 
 # Create tables if AUTO_CREATE_SCHEMA is enabled
 if settings.AUTO_CREATE_SCHEMA:
@@ -17,9 +22,9 @@ if settings.AUTO_CREATE_SCHEMA:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    print("✅ Application startup")
+    logger.info("✅ Application startup - Environment: %s", settings.ENV)
     yield
-    print("🛑 Application shutdown")
+    logger.info("🛑 Application shutdown")
 
 
 app = FastAPI(

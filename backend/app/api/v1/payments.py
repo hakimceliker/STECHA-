@@ -1,5 +1,6 @@
 """Payment endpoints - Stripe integration"""
 
+import logging
 from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -12,6 +13,7 @@ from app.db.base import User, Plan, Subscription, Payment, PaymentEvent
 from app.services.stripe_gateway import StripeGateway
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+logger = logging.getLogger(__name__)
 
 
 class PlanResponse(BaseModel):
@@ -98,9 +100,12 @@ async def create_checkout_session(
     db: Session = Depends(get_db)
 ):
     """Create Stripe checkout session for plan subscription"""
+    logger.info("Checkout session creation attempt - user_id: %d, plan_id: %d", current_user.id, request.plan_id)
+
     # Get plan
     plan = db.query(Plan).filter(Plan.id == request.plan_id).first()
     if not plan:
+        logger.warning("Checkout session creation failed - plan not found - plan_id: %d", request.plan_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Plan not found"
@@ -114,6 +119,8 @@ async def create_checkout_session(
         customer_result = StripeGateway.create_customer(customer_email, customer_name)
         customer_id = customer_result["customer_id"]
     except Exception as e:
+        logger.error("Checkout session creation failed - customer creation error - user_id: %d, error: %s",
+                    current_user.id, str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create customer: {str(e)}"
@@ -127,11 +134,15 @@ async def create_checkout_session(
             success_url=request.success_url,
             cancel_url=request.cancel_url
         )
+        logger.info("Checkout session created successfully - user_id: %d, session_id: %s",
+                   current_user.id, session_result["session_id"])
         return {
             "session_id": session_result["session_id"],
             "checkout_url": session_result["url"]
         }
     except Exception as e:
+        logger.error("Checkout session creation failed - session creation error - user_id: %d, error: %s",
+                    current_user.id, str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create checkout session: {str(e)}"
@@ -160,6 +171,9 @@ async def cancel_subscription(
     db: Session = Depends(get_db)
 ):
     """Cancel user's subscription"""
+    logger.info("Subscription cancellation attempt - subscription_id: %d, user_id: %d, at_period_end: %s",
+                subscription_id, current_user.id, request.at_period_end)
+
     # Verify subscription belongs to user
     subscription = db.query(Subscription).filter(
         Subscription.id == subscription_id,
@@ -167,6 +181,7 @@ async def cancel_subscription(
     ).first()
 
     if not subscription:
+        logger.warning("Subscription cancellation failed - not found - subscription_id: %d", subscription_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subscription not found"
@@ -189,11 +204,15 @@ async def cancel_subscription(
         db.commit()
         db.refresh(subscription)
 
+        logger.info("Subscription cancelled successfully - subscription_id: %d, new_status: %s",
+                   subscription_id, subscription.status)
         return {
             "status": "success",
             "subscription": SubscriptionResponse.model_validate(subscription).model_dump()
         }
     except Exception as e:
+        logger.error("Subscription cancellation failed - error: %s - subscription_id: %d",
+                    str(e), subscription_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cancel subscription: {str(e)}"
