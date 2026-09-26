@@ -216,3 +216,60 @@ class PaymentEvent(Base):
     event_data = Column(JSON)
     processed = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class UsageEvent(Base):
+    __tablename__ = "usage_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    conversation_id = Column(Integer, nullable=True, index=True)
+    event_type = Column(String)  # "api_call", "token_usage", "conversation_started", etc.
+    provider = Column(String, default="openai")  # openai, anthropic, cohere
+    tokens_in = Column(Integer, default=0)
+    tokens_out = Column(Integer, default=0)
+    cost_usd = Column(Float, default=0.0)
+    response_time_ms = Column(Integer, nullable=True)
+    status = Column(String)  # "success", "error", "rate_limited"
+    error_message = Column(String, nullable=True)
+    event_metadata = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class ConversationMetrics(Base):
+    __tablename__ = "conversation_metrics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, unique=True, index=True)
+    user_id = Column(Integer, index=True)
+    message_count = Column(Integer, default=0)
+    total_tokens_in = Column(Integer, default=0)
+    total_tokens_out = Column(Integer, default=0)
+    total_cost_usd = Column(Float, default=0.0)
+    average_response_time_ms = Column(Integer, nullable=True)
+    longest_message_tokens = Column(Integer, default=0)
+    providers_used = Column(JSON, default={})  # {"openai": count, "anthropic": count, ...}
+    started_at = Column(DateTime)
+    last_activity_at = Column(DateTime)
+    ended_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class UserMetrics(Base):
+    __tablename__ = "user_metrics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, unique=True, index=True)
+    total_conversations = Column(Integer, default=0)
+    total_messages = Column(Integer, default=0)
+    total_tokens_used = Column(Integer, default=0)
+    total_cost_usd = Column(Float, default=0.0)
+    total_api_calls = Column(Integer, default=0)
+    average_response_time_ms = Column(Integer, nullable=True)
+    last_active_at = Column(DateTime)
+    subscription_plan = Column(String, nullable=True)
+    plan_tokens_limit = Column(Integer, nullable=True)
+    plan_api_calls_limit = Column(Integer, nullable=True)
+    current_period_usage = Column(JSON, default={})  # {"tokens": X, "api_calls": Y, "cost": Z}
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
