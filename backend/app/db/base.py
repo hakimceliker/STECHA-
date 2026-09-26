@@ -100,6 +100,24 @@ class PreOrder(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    business_id = Column(Integer, nullable=True, index=True)
+    filename = Column(String)
+    file_path = Column(String)
+    file_size = Column(Integer)
+    mime_type = Column(String)
+    document_type = Column(String)  # "invoice", "receipt", "contract", "other"
+    extracted_text = Column(Text, nullable=True)  # OCR/extraction result
+    doc_metadata = Column(JSON, nullable=True)  # document-specific metadata
+    is_deleted = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class WaitlistEntry(Base):
     __tablename__ = "waitlist_entries"
 
