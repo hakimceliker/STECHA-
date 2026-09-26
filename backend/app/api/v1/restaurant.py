@@ -23,8 +23,7 @@ class BusinessResponse(BaseModel):
     description: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class BusinessStatsResponse(BaseModel):
     business_id: int
@@ -45,8 +44,7 @@ class ReservationDetailResponse(BaseModel):
     approval_score: float
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 async def get_owner_business(
     current_user: User = Depends(get_current_user),
@@ -65,7 +63,7 @@ async def get_owner_business(
 
 @router.get("/my-business", response_model=BusinessResponse)
 async def get_my_business(business: Business = Depends(get_owner_business)):
-    return BusinessResponse.from_orm(business)
+    return BusinessResponse.model_validate(business)
 
 @router.put("/my-business")
 async def update_my_business(
@@ -86,7 +84,7 @@ async def update_my_business(
         business.description = description
 
     db.commit()
-    return BusinessResponse.from_orm(business)
+    return BusinessResponse.model_validate(business)
 
 @router.get("/stats", response_model=BusinessStatsResponse)
 async def get_business_stats(
@@ -136,7 +134,7 @@ async def get_my_reservations(
         query = query.filter(Reservation.approval_status == status_filter)
 
     reservations = query.order_by(Reservation.created_at.desc()).limit(limit).all()
-    return [ReservationDetailResponse.from_orm(r) for r in reservations]
+    return [ReservationDetailResponse.model_validate(r) for r in reservations]
 
 @router.post("/reservations/{reservation_id}/approve")
 async def approve_reservation(

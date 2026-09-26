@@ -38,8 +38,7 @@ class ReservationResponse(BaseModel):
     approval_status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 @router.get("/reservations", response_model=List[ReservationResponse])

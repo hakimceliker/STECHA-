@@ -28,8 +28,7 @@ class DocumentUploadResponse(BaseModel):
     text_length: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class DocumentListItem(BaseModel):
@@ -40,8 +39,7 @@ class DocumentListItem(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class DocumentDetailResponse(BaseModel):
@@ -55,8 +53,7 @@ class DocumentDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class DocumentSearchRequest(BaseModel):

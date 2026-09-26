@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
 from typing import Optional, List
 import re
@@ -23,13 +23,15 @@ class WaitlistEntryCreate(BaseModel):
     consent_marketing: bool = False
     consent_terms: bool = False
 
-    @validator('phone')
+    @field_validator('phone')
+    @classmethod
     def validate_phone(cls, v):
         if v and not re.match(r'^\+?1?\d{9,15}$', v.replace(' ', '').replace('-', '')):
             raise ValueError('Invalid phone number format')
         return v
 
-    @validator('name')
+    @field_validator('name')
+    @classmethod
     def validate_name(cls, v):
         if not v or len(v.strip()) < 2:
             raise ValueError('Name must be at least 2 characters')
@@ -54,8 +56,7 @@ class WaitlistEntryResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 @router.post("/waitlist", response_model=WaitlistEntryResponse, status_code=status.HTTP_201_CREATED)

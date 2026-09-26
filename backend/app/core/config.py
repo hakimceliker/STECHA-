@@ -32,9 +32,7 @@ class Settings(BaseSettings):
     AI_PROVIDER_API_KEY: str = ""
     AI_PROVIDER_BASE_URL: str = "https://api.anthropic.com"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {"env_file": ".env", "case_sensitive": True}
 
 
 settings = Settings()

@@ -237,3 +237,38 @@ class NotificationServiceFactory:
     def create_otp_service(validity_minutes: int = 5):
         """Create OTP service"""
         return OTPService(validity_minutes)
+
+
+class NotificationServiceManager:
+    """Unified notification service manager"""
+
+    def __init__(self):
+        """Initialize manager with all services"""
+        self.email_service = EmailService()
+        self.sms_service = SMSService()
+        self.push_service = PushNotificationService()
+        self.otp_service = OTPService()
+
+    def send_email(self, to_email: str, subject: str, body: str, alert_type: str = None) -> tuple[bool, str]:
+        """Send email notification"""
+        return self.email_service.send_email(to_email, subject, body, html=True)
+
+    def send_sms(self, phone: str, message: str) -> tuple[bool, str]:
+        """Send SMS notification"""
+        return self.sms_service.send_sms(phone, message)
+
+    def send_push(self, device_token: str, title: str, body: str) -> tuple[bool, str]:
+        """Send push notification"""
+        return self.push_service.send_push(device_token, title, body)
+
+    def generate_otp(self, user_id: int) -> str:
+        """Generate OTP for user"""
+        return self.otp_service.generate_otp(user_id)
+
+    def verify_otp(self, user_id: int, code: str) -> tuple[bool, str]:
+        """Verify OTP for user"""
+        return self.otp_service.verify_otp(user_id, code)
+
+
+# Global notification service instance
+notification_service = NotificationServiceManager()

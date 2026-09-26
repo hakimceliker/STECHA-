@@ -16,8 +16,11 @@ class User(Base):
     name = Column(String)
     locale = Column(String, default="tr")
     is_admin = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True)
+    last_check_in = Column(DateTime, nullable=True)
 
 
 class Conversation(Base):

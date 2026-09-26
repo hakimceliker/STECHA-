@@ -36,8 +36,7 @@ class UserResponse(BaseModel):
     is_admin: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class UpdateUserRequest(BaseModel):
     name: Optional[str] = None
@@ -61,8 +60,7 @@ class BusinessResponse(BaseModel):
     commission_rate: float
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 def check_admin(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_admin:

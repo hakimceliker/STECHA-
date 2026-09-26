@@ -37,8 +37,7 @@ class UserResponse(BaseModel):
     locale: str
     is_admin: bool
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -108,7 +107,7 @@ async def register(req: UserRegisterRequest, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": UserResponse.from_orm(user).dict()
+        "user": UserResponse.model_validate(user).model_dump()
     }
 
 @router.post("/login", response_model=TokenResponse)
@@ -124,9 +123,52 @@ async def login(req: UserLoginRequest, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": UserResponse.from_orm(user).dict()
+        "user": UserResponse.model_validate(user).model_dump()
     }
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
-    return UserResponse.from_orm(current_user)
+    return UserResponse.model_validate(current_user)
+
+@router.delete("/me", status_code=204)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete user account (KVKK compliant - soft delete with data anonymization)"""
+    current_user.is_deleted = True
+    current_user.deleted_at = datetime.utcnow()
+    # Anonymize personal data per KVKK
+    current_user.email = f"deleted_{current_user.id}@deleted.local"
+    current_user.name = "Deleted User"
+    db.commit()
+    return None
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+async def change_password(
+    req: PasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change user password"""
+    if not verify_password(req.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect"
+        )
+
+    if len(req.new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters"
+        )
+
+    current_user.password_hash = hash_password(req.new_password)
+    current_user.updated_at = datetime.utcnow()
+    db.commit()
+
+    return {"message": "Password changed successfully"}

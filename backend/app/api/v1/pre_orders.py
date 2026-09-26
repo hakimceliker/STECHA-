@@ -45,8 +45,7 @@ class PreOrderResponse(BaseModel):
     approval_status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 @router.get("/pre-orders", response_model=List[PreOrderResponse])
