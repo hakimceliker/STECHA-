@@ -14,7 +14,7 @@ class TestAuthHealth:
 
     def test_health_endpoint(self, test_client):
         """Test that health endpoint returns 200"""
-        response = test_client.get("/api/v1/health")
+        response = test_client.get("/health")
         assert response.status_code == status.HTTP_200_OK
 
 
