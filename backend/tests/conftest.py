@@ -119,3 +119,30 @@ def registered_test_user(test_client, test_user_data):
         "email": test_user_data["email"],
         "password": test_user_data["password"]
     }
+
+
+@pytest.fixture(scope="function")
+def test_business(test_db_session):
+    """Create a test business"""
+    from app.db.base import Business
+    from datetime import datetime
+
+    business = Business(
+        owner_id=1,
+        type="restaurant",
+        name="Test Restaurant",
+        address="123 Main St",
+        phone="555-0123",
+        email="restaurant@example.com",
+        description="A test restaurant",
+        coordinates={"lat": 40.7128, "lng": -74.0060},
+        tax_no="12345678",
+        daily_capacity=100,
+        status="active",
+        commission_rate=0.1,
+        created_at=datetime.utcnow()
+    )
+    test_db_session.add(business)
+    test_db_session.commit()
+    test_db_session.refresh(business)
+    return business

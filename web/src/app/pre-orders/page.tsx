@@ -2,25 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import { Button, Card, Badge } from '@/components'
-
-interface PreOrder {
-  id: string
-  business_name: string
-  order_date: string
-  delivery_date: string
-  items: string[]
-  status: 'pending' | 'confirmed' | 'ready' | 'completed' | 'cancelled'
-  total_price: number
-}
+import { usePreOrders } from '@/hooks'
+import type { PreOrder } from '@/types'
 
 export default function PreOrdersPage() {
   const router = useRouter()
-  const [preOrders, setPreOrders] = useState<PreOrder[]>([])
+  const { preOrders, loading, error, listPreOrders } = usePreOrders()
   const [filteredOrders, setFilteredOrders] = useState<PreOrder[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -29,29 +19,12 @@ export default function PreOrdersPage() {
       return
     }
 
-    loadPreOrders()
-  }, [router])
+    listPreOrders()
+  }, [router, listPreOrders])
 
   useEffect(() => {
     filterOrders()
   }, [preOrders, filterStatus])
-
-  const loadPreOrders = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        'http://localhost:8000/api/v1/pre_orders',
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      setPreOrders(response.data.pre_orders || [])
-    } catch (error) {
-      console.error('Failed to load pre-orders:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const filterOrders = () => {
     if (filterStatus === 'all') {
@@ -79,17 +52,35 @@ export default function PreOrdersPage() {
     const labels: Record<string, string> = {
       pending: 'Beklemede',
       confirmed: 'Onaylandı',
-      ready: 'Hazır',
-      completed: 'Tamamlandı',
       cancelled: 'İptal Edildi',
     }
     return labels[status] || status
   }
 
-  if (isLoading) {
+  const getApprovalStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: 'Onay Beklemede',
+      approved: 'Onaylandı',
+      rejected: 'Reddedildi',
+    }
+    return labels[status] || status
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <p>Yükleniyor...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <Card className="p-6 text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => listPreOrders()}>Yeniden Dene</Button>
+        </Card>
       </div>
     )
   }
@@ -130,8 +121,6 @@ export default function PreOrdersPage() {
               <option value="all">Tümü</option>
               <option value="pending">Beklemede</option>
               <option value="confirmed">Onaylandı</option>
-              <option value="ready">Hazır</option>
-              <option value="completed">Tamamlandı</option>
               <option value="cancelled">İptal Edildi</option>
             </select>
           </div>
@@ -161,34 +150,43 @@ export default function PreOrdersPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       <h3 className="h4 text-slate-900 dark:text-white mb-2">
-                        {order.business_name}
+                        İş Yeri #{order.business_id}
                       </h3>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {order.items.join(', ')}
+                        {order.items_description || order.items_json.length > 0
+                          ? order.items_description || `${order.items_json.length} ürün`
+                          : 'Açıklama yok'}
                       </p>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(order.status)}>
-                      {getStatusLabel(order.status)}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant={getStatusBadgeVariant(order.status)}>
+                        {getStatusLabel(order.status)}
+                      </Badge>
+                      <Badge variant={order.approval_status === 'approved' ? 'success' : 'warning'}>
+                        {getApprovalStatusLabel(order.approval_status)}
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                     <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Sipariş Tarihi</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Oluşturma Tarihi</p>
                       <p className="font-medium text-slate-900 dark:text-white text-sm">
-                        {new Date(order.order_date).toLocaleDateString('tr-TR')}
+                        {new Date(order.created_at).toLocaleDateString('tr-TR')}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Teslim Tarihi</p>
-                      <p className="font-medium text-slate-900 dark:text-white text-sm">
-                        {new Date(order.delivery_date).toLocaleDateString('tr-TR')}
-                      </p>
-                    </div>
+                    {order.pickup_date && (
+                      <div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Teslim Tarihi</p>
+                        <p className="font-medium text-slate-900 dark:text-white text-sm">
+                          {new Date(order.pickup_date).toLocaleDateString('tr-TR')}
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Tutar</p>
                       <p className="font-medium text-slate-900 dark:text-white text-sm">
-                        ${(order.total_price / 100).toFixed(2)}
+                        {order.total_try.toFixed(2)} {order.currency}
                       </p>
                     </div>
                   </div>

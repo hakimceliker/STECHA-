@@ -2,25 +2,16 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import { Button, Input, Card, Badge } from '@/components'
-
-interface Reservation {
-  id: string
-  business_name: string
-  reservation_date: string
-  guest_count: number
-  status: 'pending' | 'approved' | 'rejected' | 'completed'
-  special_requests: string
-}
+import { useReservations } from '@/hooks'
+import type { Reservation } from '@/types'
 
 export default function ReservationsPage() {
   const router = useRouter()
-  const [reservations, setReservations] = useState<Reservation[]>([])
+  const { reservations, loading, error, listReservations } = useReservations()
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -29,36 +20,19 @@ export default function ReservationsPage() {
       return
     }
 
-    loadReservations()
-  }, [router])
+    listReservations()
+  }, [router, listReservations])
 
   useEffect(() => {
     filterReservations()
   }, [reservations, searchTerm, filterStatus])
-
-  const loadReservations = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        'http://localhost:8000/api/v1/reservations',
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-      setReservations(response.data.reservations || [])
-    } catch (error) {
-      console.error('Failed to load reservations:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const filterReservations = () => {
     let filtered = reservations
 
     if (searchTerm) {
       filtered = filtered.filter(r =>
-        r.business_name.toLowerCase().includes(searchTerm.toLowerCase())
+        String(r.business_id).toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -71,31 +45,50 @@ export default function ReservationsPage() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'confirmed':
         return 'success'
-      case 'rejected':
+      case 'cancelled':
         return 'error'
-      case 'completed':
-        return 'primary'
-      default:
+      case 'pending':
         return 'warning'
+      default:
+        return 'primary'
     }
   }
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
       pending: 'Beklemede',
-      approved: 'Onaylandı',
-      rejected: 'Reddedildi',
-      completed: 'Tamamlandı',
+      confirmed: 'Onaylandı',
+      cancelled: 'İptal Edildi',
     }
     return labels[status] || status
   }
 
-  if (isLoading) {
+  const getApprovalStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: 'Onay Beklemede',
+      approved: 'Onaylandı',
+      rejected: 'Reddedildi',
+    }
+    return labels[status] || status
+  }
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <p>Yükleniyor...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <Card className="p-6 text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => listReservations()}>Yeniden Dene</Button>
+        </Card>
       </div>
     )
   }
@@ -127,7 +120,7 @@ export default function ReservationsPage() {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
-                label="Restoran Adı"
+                label="İş Yeri ID"
                 placeholder="Ara..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -176,15 +169,20 @@ export default function ReservationsPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       <h3 className="h4 text-slate-900 dark:text-white mb-2">
-                        {reservation.business_name}
+                        İş Yeri #{reservation.business_id}
                       </h3>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
                         👥 {reservation.guest_count} Kişi
                       </p>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(reservation.status)}>
-                      {getStatusLabel(reservation.status)}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant={getStatusBadgeVariant(reservation.status)}>
+                        {getStatusLabel(reservation.status)}
+                      </Badge>
+                      <Badge variant={reservation.approval_status === 'approved' ? 'success' : 'warning'}>
+                        {getApprovalStatusLabel(reservation.approval_status)}
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
