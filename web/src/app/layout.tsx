@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
+import './accessibility.css'
 import { ErrorBoundary } from '@/components'
 
 const inter = Inter({
@@ -40,7 +41,7 @@ export default function RootLayout({
       </head>
       <body>
         <a href="#main-content" className="sr-only focus:not-sr-only">
-          Main content'e atla
+          Main content&apos;e atla
         </a>
         <ErrorBoundary>
           <main id="main-content" className="min-h-screen">

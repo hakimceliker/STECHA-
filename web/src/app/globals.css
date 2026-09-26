@@ -295,21 +295,6 @@ body {
   @apply sm:px-6 md:px-8;
 }
 
-/* Accessibility Utilities */
-
-/* Screen Reader Only - Hide visually but keep accessible */
-.sr-only {
-  @apply absolute -left-10000px w-1px h-1px overflow-hidden;
-}
-
-.sr-only:focus {
-  @apply relative left-0 w-auto h-auto;
-}
-
-.focus\:not-sr-only:focus {
-  @apply relative left-0 w-auto h-auto;
-}
-
 /* Enhanced Focus States */
 :focus-visible {
   outline: 2px solid var(--primary-light);
