@@ -3,3 +3,4 @@ export * from './pre-orders';
 export * from './business';
 export * from './user';
 export * from './admin';
+export * from './restaurant';

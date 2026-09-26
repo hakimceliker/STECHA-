@@ -213,7 +213,7 @@ export default function ChatPage() {
                 <p className="text-4xl mb-4">💬</p>
                 <h3 className="h4 mb-2">Yeni Sohbete Hoş Geldin!</h3>
                 <p className="body-sm text-slate-600 dark:text-slate-400">
-                  Stech AI'a sorularını sor, rezervasyon yap, ön sipariş ver veya sohbet et.
+                  Stech AI&apos;a sorularını sor, rezervasyon yap, ön sipariş ver veya sohbet et.
                 </p>
               </Card>
             </div>

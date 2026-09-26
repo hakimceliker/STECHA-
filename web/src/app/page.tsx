@@ -154,7 +154,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="body-sm text-slate-600 dark:text-slate-300">
-                Web, iOS ve Android'de tam deneyim.
+                Web, iOS ve Android&apos;de tam deneyim.
                 Senkronize verilerinizi her yerden erişin.
               </p>
             </CardContent>
