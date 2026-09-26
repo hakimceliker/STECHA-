@@ -49,7 +49,7 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/stecha_test
-          JWT_SECRET_KEY: test-secret-key
+          JWT_SECRET: test-secret-key-minimum-32-chars-for-production
           STRIPE_SECRET_KEY: sk_test_dummy
         run: |
           pytest -v --tb=short --cov=app --cov-report=xml
