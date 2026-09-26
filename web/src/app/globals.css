@@ -294,3 +294,109 @@ body {
   @apply mx-auto max-w-7xl px-4;
   @apply sm:px-6 md:px-8;
 }
+
+/* Accessibility Utilities */
+
+/* Screen Reader Only - Hide visually but keep accessible */
+.sr-only {
+  @apply absolute -left-10000px w-1px h-1px overflow-hidden;
+}
+
+.sr-only:focus {
+  @apply relative left-0 w-auto h-auto;
+}
+
+.focus\:not-sr-only:focus {
+  @apply relative left-0 w-auto h-auto;
+}
+
+/* Enhanced Focus States */
+:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --primary-light: #0040ff;
+    --secondary-light: #ff6600;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Better Link Appearance */
+a {
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
+
+a:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-blue-600 dark:outline-blue-400 rounded;
+}
+
+/* Improved Form Elements */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Better Button Focus */
+button:focus-visible {
+  @apply outline outline-2 outline-offset-2;
+}
+
+/* Loading States */
+[aria-busy="true"] {
+  @apply opacity-60;
+}
+
+/* Error States */
+[aria-invalid="true"] {
+  @apply border-red-500 dark:border-red-400;
+}
+
+/* Hover States for Touch Devices */
+@media (hover: none) {
+  button:hover,
+  a:hover {
+    text-decoration: none;
+  }
+}

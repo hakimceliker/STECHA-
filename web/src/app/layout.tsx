@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
+import { ErrorBoundary } from '@/components'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     'Restoranlar ve müşteriler için AI-destekli masa rezervasyonu, ön sipariş ve hizmet platformu',
   keywords: ['restaurant', 'reservation', 'AI', 'Turkish', 'food ordering'],
   authors: [{ name: 'Stech AI' }],
-  viewport: 'width=device-width, initial-scale=1.0',
+  viewport: 'width=device-width, initial-scale=1.0, maximum-scale=5.0',
   icons: {
     icon: '/favicon.ico',
   },
@@ -33,7 +34,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" className={`${inter.variable} ${poppins.variable}`}>
-      <body>{children}</body>
+      <head>
+        {/* Skip to main content link for keyboard users */}
+        <link rel="preload" as="style" href="/globals.css" />
+      </head>
+      <body>
+        <a href="#main-content" className="sr-only focus:not-sr-only">
+          Main content'e atla
+        </a>
+        <ErrorBoundary>
+          <main id="main-content" className="min-h-screen">
+            {children}
+          </main>
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }
