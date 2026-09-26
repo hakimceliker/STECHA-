@@ -22,11 +22,22 @@ export interface DashboardMetrics {
 export interface RestaurantReservation extends Reservation {
   user_email?: string
   user_name?: string
+  customer_name?: string
+  customer_phone?: string
 }
 
 export interface RestaurantPreOrder extends PreOrder {
   user_email?: string
   user_name?: string
+  customer_name?: string
+  customer_phone?: string
+  total_amount?: number
+  special_requests?: string
+  items?: Array<{
+    name: string
+    quantity: number
+    price: number
+  }>
 }
 
 export interface RestaurantUpdateRequest {
