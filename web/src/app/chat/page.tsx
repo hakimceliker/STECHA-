@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Button, Input, Card } from '@/components'
+import { handleListKeyboardNavigation, announceToScreenReader } from '@/lib/a11y'
 
 interface Message {
   id: string
@@ -27,7 +28,9 @@ export default function ChatPage() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [selectedConversationIndex, setSelectedConversationIndex] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const conversationListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Check authentication
@@ -38,7 +41,28 @@ export default function ChatPage() {
     }
     setIsAuthenticated(true)
     loadConversations()
-  }, [router])
+
+    // Add keyboard handler for conversation list
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!conversationListRef.current || conversations.length === 0) return
+
+      const listItems = Array.from(
+        conversationListRef.current.querySelectorAll('[role="option"]')
+      ) as HTMLElement[]
+
+      const newIndex = handleListKeyboardNavigation(e, listItems, selectedConversationIndex)
+
+      if (newIndex !== null && newIndex !== selectedConversationIndex) {
+        setSelectedConversationIndex(newIndex)
+        const selectedConv = conversations[newIndex]
+        loadConversation(selectedConv.id)
+        announceToScreenReader(`Seçili sohbet: ${selectedConv.title}`)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [router, conversations.length, selectedConversationIndex])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -154,24 +178,35 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex bg-white dark:bg-slate-900">
+    <div className="h-screen flex flex-col md:flex-row bg-white dark:bg-slate-900">
       {/* Sidebar */}
-      <div className="w-64 border-r border-slate-200 dark:border-slate-700 flex flex-col bg-slate-50 dark:bg-slate-800">
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex flex-col bg-slate-50 dark:bg-slate-800 md:max-h-screen">
         <div className="p-4 border-b border-slate-200 dark:border-slate-700">
           <Button fullWidth onClick={createNewConversation} variant="primary" size="sm">
             + Yeni Sohbet
           </Button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {conversations.map(conv => (
+        <div
+          ref={conversationListRef}
+          className="flex-1 overflow-y-auto p-4 space-y-2"
+          role="listbox"
+          aria-label="Sohbet listesi"
+        >
+          {conversations.map((conv, index) => (
             <button
               key={conv.id}
-              onClick={() => loadConversation(conv.id)}
-              className={`w-full text-left p-3 rounded-lg transition-colors ${
-                currentConversation?.id === conv.id
+              onClick={() => {
+                loadConversation(conv.id)
+                setSelectedConversationIndex(index)
+              }}
+              className={`w-full text-left p-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                currentConversation?.id === conv.id || index === selectedConversationIndex
                   ? 'bg-blue-600 text-white'
                   : 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-600'
               }`}
+              role="option"
+              aria-selected={currentConversation?.id === conv.id || index === selectedConversationIndex}
+              tabIndex={index === selectedConversationIndex ? 0 : -1}
             >
               <p className="truncate text-sm font-medium">{conv.title}</p>
               <p className="text-xs mt-1 opacity-70">
@@ -197,16 +232,16 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="h-16 border-b border-slate-200 dark:border-slate-700 flex items-center px-6">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
+        <div className="h-14 md:h-16 border-b border-slate-200 dark:border-slate-700 flex items-center px-4 md:px-6">
+          <h1 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white truncate">
             {currentConversation?.title || 'Stech AI'}
           </h1>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <Card className="text-center py-12 max-w-md">
@@ -263,20 +298,22 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <form onSubmit={sendMessage} className="flex gap-3">
+        <div className="p-4 md:p-6 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+          <form onSubmit={sendMessage} className="flex gap-2 md:gap-3">
             <Input
               type="text"
               placeholder="Mesaj gönder..."
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               disabled={isLoading || !currentConversation}
+              aria-label="Mesaj gönderme alanı"
             />
             <Button
               type="submit"
               size="lg"
               isLoading={isLoading}
               disabled={!inputValue.trim() || !currentConversation}
+              aria-label="Mesaj gönder"
             >
               Gönder
             </Button>
