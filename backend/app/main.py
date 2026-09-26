@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.session import engine
 from app.db.base import Base
-from app.api.v1 import auth, chat, conversations, places, reservations, pre_orders, waitlist, wallet, admin, restaurant
+from app.api.v1 import auth, chat, conversations, places, reservations, pre_orders, waitlist, wallet, admin, restaurant, documents
 
 # Create tables if AUTO_CREATE_SCHEMA is enabled
 if settings.AUTO_CREATE_SCHEMA:
@@ -59,6 +59,7 @@ app.include_router(waitlist.router, prefix="/api/v1")
 app.include_router(wallet.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(restaurant.router, prefix="/api/v1")
+app.include_router(documents.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":
