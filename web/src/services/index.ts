@@ -1,3 +1,4 @@
 export { reservationService } from './reservations'
 export { preOrderService } from './pre-orders'
 export { businessService } from './businesses'
+export { adminService } from './admin'
