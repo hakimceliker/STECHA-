@@ -38,7 +38,6 @@ backend/.env.local
 web/.next/
 web/out/
 web/node_modules/
-web/package-lock.json
 web/yarn.lock
 web/dist/
 web/.env.local
