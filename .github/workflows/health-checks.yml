@@ -128,17 +128,25 @@ jobs:
           # Verify required env files exist or can be created
           echo "Environment check completed"
 
-      - name: Verify build cache
+      - name: Build project
         working-directory: ./web
         run: |
-          npm run build 2>&1 | tail -20
-        continue-on-error: true
+          echo "Node version:"
+          node --version
+          echo "npm version:"
+          npm --version
+          echo "Building project..."
+          npm run build
+        env:
+          NODE_ENV: production
 
-      - name: Check bundle size
+      - name: Verify build output
         working-directory: ./web
         run: |
-          SIZE=$(du -sh .next/standalone 2>/dev/null || echo "0")
-          echo "Build size: $SIZE"
+          echo "Build output directory contents:"
+          ls -lah .next/ | head -20
+          echo "Total size of .next directory:"
+          du -sh .next/
 
   deployment-readiness:
     runs-on: ubuntu-latest
