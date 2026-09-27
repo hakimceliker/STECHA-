@@ -121,13 +121,15 @@ jobs:
       - name: Install dependencies
         working-directory: ./web
         run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing web directory:"
-          ls -la
-          echo "Checking for package-lock.json:"
+          echo "=== Environment Info ==="
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo ""
+          echo "=== Checking for package-lock.json ==="
           [ -f package-lock.json ] && echo "✓ package-lock.json exists" || echo "✗ package-lock.json NOT FOUND"
-          echo "Installing dependencies with npm ci..."
-          npm ci
+          echo ""
+          echo "=== Installing dependencies with npm ci ==="
+          npm ci --verbose 2>&1 | tail -30 || (echo "npm ci failed with exit code $?"; exit 1)
 
       - name: Check environment variables
         working-directory: ./web
