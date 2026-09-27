@@ -120,7 +120,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./web
-        run: npm ci
+        run: |
+          # Clear any potentially corrupted cache
+          npm cache clean --force
+          # Install dependencies
+          npm ci --verbose
 
       - name: Check environment variables
         working-directory: ./web
