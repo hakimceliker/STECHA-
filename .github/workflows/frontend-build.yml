@@ -28,10 +28,13 @@ jobs:
       - name: Install dependencies
         working-directory: ./web
         run: |
-          # Clear any potentially corrupted cache
-          npm cache clean --force
-          # Install dependencies
-          npm ci --verbose
+          echo "Current directory: $(pwd)"
+          echo "Listing web directory:"
+          ls -la
+          echo "Checking for package-lock.json:"
+          [ -f package-lock.json ] && echo "✓ package-lock.json exists" || echo "✗ package-lock.json NOT FOUND"
+          echo "Installing dependencies with npm ci..."
+          npm ci
 
       - name: Run ESLint
         working-directory: ./web
