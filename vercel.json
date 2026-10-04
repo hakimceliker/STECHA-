@@ -1,0 +1,115 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "dev": "npm run dev",
+  "env": {
+    "NEXT_PUBLIC_API_URL": {
+      "description": "Public API endpoint URL for frontend",
+      "required": false,
+      "default": "http://localhost:3000/api"
+    },
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase project URL",
+      "required": true
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "description": "Supabase public/anonymous key",
+      "required": true
+    },
+    "SUPABASE_SERVICE_ROLE_KEY": {
+      "description": "Supabase service role key (server-side only)",
+      "required": true
+    },
+    "OPENAI_API_KEY": {
+      "description": "OpenAI API key for AI features",
+      "required": true
+    },
+    "STRIPE_PUBLISHABLE_KEY": {
+      "description": "Stripe public/publishable key",
+      "required": true
+    },
+    "STRIPE_SECRET_KEY": {
+      "description": "Stripe secret key (server-side only)",
+      "required": true
+    },
+    "STRIPE_WEBHOOK_SECRET": {
+      "description": "Stripe webhook signing secret",
+      "required": true
+    },
+    "INNGEST_EVENT_KEY": {
+      "description": "Inngest event signing key",
+      "required": true
+    },
+    "INNGEST_SIGNING_KEY": {
+      "description": "Inngest webhook signing key",
+      "required": true
+    },
+    "SENTRY_DSN": {
+      "description": "Sentry error tracking DSN",
+      "required": false
+    },
+    "LANGFUSE_PUBLIC_KEY": {
+      "description": "Langfuse trace logging key",
+      "required": false
+    },
+    "POSTHOG_API_KEY": {
+      "description": "PostHog analytics API key",
+      "required": false
+    },
+    "NODE_ENV": {
+      "description": "Node environment (development, preview, production)",
+      "required": true,
+      "default": "production"
+    }
+  },
+  "envPrefix": "NEXT_PUBLIC_",
+  "regions": ["iad1"],
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "redirects": [],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.stechai.app/:path*"
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "framework": "nextjs"
+}
