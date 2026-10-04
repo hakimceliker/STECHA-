@@ -1,0 +1,79 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    container_name: stech_db
+    environment:
+      POSTGRES_USER: stech_user
+      POSTGRES_PASSWORD: stech_pass
+      POSTGRES_DB: stech_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stech_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: stech_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stech_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      DATABASE_URL: postgresql://stech_user:stech_pass@db:5432/stech_db
+      REDIS_URL: redis://redis:6379
+      ENV: staging
+      AUTO_CREATE_SCHEMA: "false"
+      JWT_SECRET: staging-secret-min-32-chars-required-here-1234567890
+      AI_PROVIDER: demo
+      CORS_ORIGINS: http://localhost:3000,http://localhost:8081
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: stech_web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./web:/app
+
+  mobile:
+    image: cirrusci/flutter:latest
+    container_name: stech_mobile
+    working_dir: /app
+    volumes:
+      - ./mobile:/app
+    command: flutter pub get
+
+volumes:
+  postgres_data:

@@ -1,0 +1,75 @@
+# STECH AI V1 - Code Ownership & Review Requirements
+#
+# Each file path below requires review from the specified team(s) before merge.
+# Format: path @github-handle-or-team
+#
+# Reference: AGENTS.md for team responsibilities
+
+# Repository governance documents (require Claude review for accuracy)
+AGENTS.md @claude-code-review
+CODEOWNERS @claude-code-review
+README.md @claude-code-review
+ARCHITECTURE.md @claude-code-review
+.env.example @claude-code-review
+
+# GitHub CI/CD configuration (GPT/Codex + Claude security review)
+.github/workflows/ @gpt-codex @claude-code-review
+.github/CODEOWNERS @claude-code-review
+
+# Core application code (GPT/Codex primary, Claude security review)
+src/ @gpt-codex @claude-code-review
+backend/ @gpt-codex @claude-code-review
+
+# Database migrations & schema (Supabase primary, Claude review)
+supabase/migrations/ @supabase-team @claude-code-review
+supabase/seed.sql @supabase-team @claude-code-review
+supabase/*.json @supabase-team @claude-code-review
+
+# Payment integration (Stripe + Claude security review)
+src/payments/ @stripe-team @claude-code-review
+src/webhooks/ @stripe-team @gpt-codex @claude-code-review
+
+# AI provider integration (Provider teams + Claude security review)
+src/ai/ @ai-provider-team @claude-code-review
+evals/ @ai-provider-team @gpt-codex
+
+# Workflow orchestration (Inngest + GPT/Codex)
+src/inngest/ @inngest-team @gpt-codex @claude-code-review
+
+# Observability (Sentry/PostHog + Claude security review)
+src/observability/ @observability-team @gpt-codex @claude-code-review
+
+# Frontend/UI (GPT/Codex + Design + Claude)
+web/ @gpt-codex @design-team @claude-code-review
+design/ @design-team
+
+# Mobile (Future: Flutter)
+mobile/ @gpt-codex
+
+# Tests
+tests/ @gpt-codex @claude-code-review
+
+# Configuration files
+docker-compose.yml @gpt-codex @claude-code-review
+Dockerfile @gpt-codex @claude-code-review
+vercel.json @vercel-team @gpt-codex
+tsconfig.json @gpt-codex
+jest.config.js @gpt-codex
+.eslintrc.json @gpt-codex
+
+# Documentation (Claude review for accuracy)
+docs/ @claude-code-review @gpt-codex
+docs/delivery/ @claude-code-review
+docs/security/ @claude-code-review @gpt-codex
+docs/architecture/ @claude-code-review @gpt-codex
+docs/release/ @claude-code-review @user-approval
+
+# Scripts (GPT/Codex maintenance)
+scripts/ @gpt-codex
+
+# Security & sensitive (Claude mandatory review)
+docs/security/ @claude-code-review
+docs/decisions/ @claude-code-review
+
+# Catch-all (default: Claude review required)
+* @claude-code-review

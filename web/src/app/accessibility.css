@@ -1,0 +1,143 @@
+/* Accessibility Utilities */
+
+/* Screen Reader Only - Hide visually but keep accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus,
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Enhanced Focus States */
+:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --primary-light: #0040ff;
+    --secondary-light: #ff6600;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 641px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Better Link Appearance */
+a {
+  color: #2563EB;
+}
+
+@media (prefers-color-scheme: dark) {
+  a {
+    color: #60A5FA;
+  }
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  a:focus-visible {
+    outline-color: #60A5FA;
+  }
+}
+
+/* Improved Form Elements */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Better Button Focus */
+button:focus-visible {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+
+/* Loading States */
+[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+/* Error States */
+[aria-invalid="true"] {
+  border-color: #EF4444;
+}
+
+@media (prefers-color-scheme: dark) {
+  [aria-invalid="true"] {
+    border-color: #F87171;
+  }
+}
+
+/* Hover States for Touch Devices */
+@media (hover: none) {
+  button:hover,
+  a:hover {
+    text-decoration: none;
+  }
+}
