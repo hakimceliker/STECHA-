@@ -1,0 +1,40 @@
+{
+  "project_id": "stecha-ai-v1",
+  "region": "eu-west-1",
+  "database": {
+    "name": "stecha",
+    "host": "db.supabase.co",
+    "port": 5432,
+    "user": "postgres",
+    "password": "${DB_PASSWORD}",
+    "ssl": true,
+    "schema": "public"
+  },
+  "auth": {
+    "jwt": {
+      "secret": "${JWT_SECRET}",
+      "exp": 3600,
+      "algorithm": "HS256"
+    },
+    "providers": [
+      "email",
+      "google",
+      "github"
+    ]
+  },
+  "storage": {
+    "buckets": [
+      {
+        "id": "avatars",
+        "public": true,
+        "max_size": 5242880
+      },
+      {
+        "id": "conversations",
+        "public": false,
+        "max_size": 52428800
+      }
+    ]
+  },
+  "version": "1.0.0"
+}
