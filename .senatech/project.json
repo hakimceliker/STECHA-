@@ -1,0 +1,10 @@
+{
+  "project_id": "stechai",
+  "display_name": "STECHAI",
+  "policy_id": "senatech-universal",
+  "policy_version": "1.0.0",
+  "control_plane_required": true,
+  "validator_required": true,
+  "audit_required": true,
+  "live_financial_orders_enabled": false
+}
