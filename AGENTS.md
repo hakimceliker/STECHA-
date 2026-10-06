@@ -1,5 +1,16 @@
 # STECH AI V1 - Agents, Boundaries & Ownership
 
+## Senatech Universal Policy Binding
+
+This repository is governed by the Senatech Universal Operating Policy,
+`senatech-universal` version `1.0.0`, with canonical project ID `stechai`.
+Integrated work must pass through the Senatech Control Plane and preserve
+validator and audit evidence. Routine, reversible work in this repository may
+proceed without repeated confirmation. Explicit human approval is required for
+production, DNS, secrets, credentials, payments, deletion, live financial
+orders or external representation. Never claim an action or test that was not
+verified.
+
 Based on **STECH AI V1 Görev dağılımı ve teslim planı** (Delivery Plan v1)
 
 ---
